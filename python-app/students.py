@@ -21,4 +21,9 @@ def get_student(conn, student_id):
     return None
 
 def average_grade(conn):
-    pass # <-- LE TROU EST ICI POUR L'INSTANT
+    with conn.cursor() as cur:
+        cur.execute("SELECT AVG(grade) FROM students")
+        result = cur.fetchone()[0]
+    if result is None:
+        return None
+    return float(result)
