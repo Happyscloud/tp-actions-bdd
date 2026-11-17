@@ -7,12 +7,16 @@ on:
 jobs:
   python:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - name: Préparer la base
         run: bash db/setup.sh
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Installer
         working-directory: python-app
         run: pip install -r requirements.txt
@@ -61,3 +65,22 @@ jobs:
       - name: Tester
         working-directory: php-app
         run: vendor/bin/phpunit tests
+
+  build:
+    needs: [python, node, java, php]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build terminé
+        run: echo "Tous les tests sont passés. Build réussi."
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déploiement
+        env:
+          TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          echo "Déploiement en cours..."
+          test -n "$TOKEN" && echo "Token présent"
